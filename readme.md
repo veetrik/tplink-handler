@@ -41,31 +41,31 @@ SITEMAP
 
 RULES
 
- rule "Switch bedroom lamp rule"
- when 
-	Item Light_BR received update
- then
-    var state = "?"
-    switch(Light_BR.state.toString.toUpperCase)
-	{
-		case "ON":   state = "1"
-		case "OFF":  state = "0"
-		default: TalkMessage.sendCommand("unknown bedroom lamp")
-	}	
-	executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler 192.168.0.101="+state)
- end
+	rule "Switch bedroom lamp rule"
+	when 
+		Item Light_BR received update
+	then
+		var state = "?"
+		switch(Light_BR.state.toString.toUpperCase)
+		{
+			case "ON":   state = "1"
+			case "OFF":  state = "0"
+			default: TalkMessage.sendCommand("unknown bedroom lamp")
+		}	
+		executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler 192.168.0.101="+state)
+	end
 
- rule "Switch living room lamp rule"
- when 
-	Item Light_LR received update
- then
-    var state = "?"
-    switch(Light_LR.state.toString.toUpperCase)
-	{
-		case "ON":   state = "1"
-		case "OFF":  state = "0"
-		default: TalkMessage.sendCommand("unknown livingroom lamp")
-	}	
-	executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler -B 192.168.0.123="+state)
- end
+	rule "Switch living room lamp rule"
+	when 
+		Item Light_LR received update
+	then
+		var state = "?"
+		switch(Light_LR.state.toString.toUpperCase)
+		{
+			case "ON":   state = "1"
+			case "OFF":  state = "0"
+			default: TalkMessage.sendCommand("unknown livingroom lamp")
+		}	
+		executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler -B 192.168.0.123="+state)
+	end
 
