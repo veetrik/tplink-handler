@@ -69,3 +69,6 @@ RULES
 		executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler -B 192.168.0.123="+state)
 	end
 
+Credits & references	
+
+	plasticrake (https://www.npmjs.com/package/hs100-api)
