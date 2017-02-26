@@ -1,4 +1,4 @@
-I was using the tp-link smart switches with the is link without problems until I added a tplink smart bulb.
+I was using the tp-link smart switches with the hs100-api without problems until I added a tplink smart bulb.
 It looks like the packets are not the sams as for the smart switch. So I decided to write my own
 program interface to handle this in nodejs. It can be use to switch a tp-link smart plug (HS100) or 
 smart bulb (LB100) on and off.
