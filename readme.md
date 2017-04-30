@@ -1,20 +1,22 @@
 I was using the tp-link smart switches with the hs100-api without problems until I added a tplink smart bulb.
 It looks like the packets are not the sams as for the smart switch. So I decided to write my own
 program interface to handle this in nodejs. It can be use to switch a tp-link smart plug (HS100) or 
-smart bulb (LB100) on and off.
+smart bulb (LB100) on and off. I also added the ability to set the hue on color smart bulb (LB130).
 
 In order to use it you must download and install nodeJS (https://nodejs.org/en/download/).
 Once install you can execute this program on the command line by entering:
 
-	node tplink-handler {switches} [ip-address]=state {-B} 
+	node tplink-handler {switches} [ip-address] [command] 
 		where:
 			ip-addess is the local network address of the smart plug or bulb
-			state is 0 to turn the switch off
-			state is 1 to turn the switch on
-			state is ? to query the state of the switch
+			command is 0 or off, to turn the switch off
+			command is 1 or on, to turn the switch on
+			command is ? or query, to query the state of the switch
+			command is the hue value if the -H switch is set
 
 		switches:	
 			-B indicates that the switch is a smart bulb
+			-H set hue on smartplug (also turns bulb on)
 			-J return JSON string
 			-T=n set time-out to n on mili-seconds, default is 500
 			
@@ -22,10 +24,13 @@ Once install you can execute this program on the command line by entering:
 			ip-address=0 to indicate that the switch is off
 			ip-address=1 to indicate that the switch is on
 			ip-address=? to indicate that the switch istate is unknown
+			ip-address=hue to indicate the huse when -H is set
 
-		example:
+		examples:
 
-			node tplink-handler 192.168.0.124=1 -B
+			node tplink-handler -B 192.168.0.124=1 (turns smartbulb on) 
+			node tplink-handler 192.168.0.123 off  (turns smartplug off)
+			node tplink-handler -h 192.168.0.124 320 (sets smartbulb hue to 320)
 
 OpenHAB configuration samples:
 			
@@ -41,6 +46,8 @@ SITEMAP
 
 RULES
 
+    var TPLINK_HANDLER = "node g:/apps/automation/openhab-2.0.0/conf/scripts/tplink-handler"
+
 	rule "Switch bedroom lamp rule"
 	when 
 		Item Light_BR received update
@@ -52,23 +59,17 @@ RULES
 			case "OFF":  state = "0"
 			default: TalkMessage.sendCommand("unknown bedroom lamp")
 		}	
-		executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler 192.168.0.101="+state)
+		executeCommandLine(TPLINK_HANDLER+" 192.168.0.101 "+state)
 	end
 
 	rule "Switch living room lamp rule"
 	when 
 		Item Light_LR received update
 	then
-		var state = "?"
-		switch(Light_LR.state.toString.toUpperCase)
-		{
-			case "ON":   state = "1"
-			case "OFF":  state = "0"
-			default: TalkMessage.sendCommand("unknown livingroom lamp")
-		}	
-		executeCommandLine("g:/apps/nodejs/node g:/apps/homecontrol/node/tplink-handler -B 192.168.0.123="+state)
+		executeCommandLine(TPLINK_HANDLER+" -B 192.168.0.123="+Light_LR.state)
 	end
 
 Credits & references	
 
 	plasticrake (https://www.npmjs.com/package/hs100-api)
+	DaveGut (https://github.com/DaveGut/TP-Link-to-SmartThings-Integration}
