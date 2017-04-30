@@ -24,7 +24,7 @@ Once install you can execute this program on the command line by entering:
 			ip-address=0 to indicate that the switch is off
 			ip-address=1 to indicate that the switch is on
 			ip-address=? to indicate that the switch istate is unknown
-			ip-address=hue to indicate the huse when -H is set
+			ip-address=hue to indicate the hue when -H is set
 
 		examples:
 
