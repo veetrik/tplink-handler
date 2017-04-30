@@ -45,7 +45,7 @@ SITEMAP
 	Switch item=Light_LR  label="Living Room Lamp" 
 
 RULES
-
+    // Note: set TPLINK_HANDLER to point to your tplink-handler location
     var TPLINK_HANDLER = "node g:/apps/automation/openhab-2.0.0/conf/scripts/tplink-handler"
 
 	rule "Switch bedroom lamp rule"
