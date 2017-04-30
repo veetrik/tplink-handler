@@ -36,13 +36,15 @@ OpenHAB configuration samples:
 			
 ITEMS
 
-	String Light_BR "Light BR" 
-	String Light_LR "Light LR" 
+	String Light_BR "Bedroom Lamp" 
+	String Light_LR "Living Room Lamp" 
+    Number Light_Hue "Light Hue"   
 
 SITEMAP
 
-	Switch item=Light_BR  label="Bedroom Lamp"     
-	Switch item=Light_LR  label="Living Room Lamp" 
+	Switch item=Light_BR  
+	Switch item=Light_LR  
+    Slider item=Light_Hue 
 
 RULES
 
@@ -58,16 +60,27 @@ RULES
 		{
 			case "ON":   state = "1"
 			case "OFF":  state = "0"
-			default: TalkMessage.sendCommand("unknown bedroom lamp")
 		}	
-		executeCommandLine(TPLINK_HANDLER+" 192.168.0.101 "+state)
+		executeCommandLine(TPLINK_HANDLER+" 192.168.0.101="+state)
 	end
 
 	rule "Switch living room lamp rule"
 	when 
 		Item Light_LR received update
 	then
-		executeCommandLine(TPLINK_HANDLER+" -B 192.168.0.123="+Light_LR.state)
+		executeCommandLine(TPLINK_HANDLER+" -B 192.168.0.123 "+Light_LR.state)
+	end
+
+	rule "Light Hue rule"
+	when 
+		Item Light_Hue received command
+	then
+		if (Light_Hue.state instanceof DecimalType) 
+		{
+			var int hue = (Light_Hue.state as DecimalType).intValue
+			hue = (hue * 3.6).intValue 
+			executeCommandLine(TPLINK_HANDLER + " -H 192.168.0.120 "+hue)
+		}
 	end
 
 Credits & references	
