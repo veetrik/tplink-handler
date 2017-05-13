@@ -16,9 +16,11 @@ Once install you can execute this program on the command line by entering:
 
 		switches:	
 			-B indicates that the switch is a smart bulb
-			-H set hue on smartplug (also turns bulb on)
+			-H set hue on LB130 smartplug (also turns bulb on)
 			-J return JSON string
 			-T=n set time-out to n on mili-seconds, default is 500
+			-D set debug mode (returns entire JSON packet from device)
+			-L=local set local EU for europe, default US
 			
 		the program returns the following
 			ip-address=0 to indicate that the switch is off

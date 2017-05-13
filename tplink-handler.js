@@ -3,9 +3,10 @@ const PROG = "tplink-handler";
 const dgram = require('dgram');
 const PORT = 9999;
 var TIME_OUT = 500;
+var COUNTRY = "US";
 var DEBUG = false, USE_CMD = false, USE_JSON = false, USE_BULB = false, USE_HUE = false;
 const GET_INFO = '{"system":{"get_sysinfo":{}}}';
-const LOG_FILE = "g:/Apps/Automation/openhab-2.0.0/userdata/logs/handler.log";
+var LOG_FILE = "" //"g:/Apps/Automation/openhab-2.0.0/userdata/logs/handler.log";
 var unit="", addr="", cmd="";
 
 if (getParms() == false) return;
@@ -28,7 +29,8 @@ else
 //-------------------------------------------------------------------------
 function log(msg)
 {
-    fs.appendFile(LOG_FILE, new Date().toLocaleString() + " " + msg + "\n"); 
+    if (LOG_FILE>" ")
+       fs.appendFile(LOG_FILE, new Date().toLocaleString() + " " + msg + "\n"); 
 	if (DEBUG) console.log(msg);
 }
 //-------------------------------------------------------------------------
@@ -75,21 +77,35 @@ function showInfo(sysinfo)
 	var dev = "";
 	var hue = "";
 	
-	if (model=="HS100(US)")
+	if (model=="HS100("+COUNTRY+")")
 	{
 		dev = sysinfo.dev_name;
 		mac = sysinfo.mac.replace(/:/g,"");
 		state = sysinfo.relay_state;
 		hue = "0";
 	}
-	if (model=="LB100(US)")
+	if (model=="HS110("+COUNTRY+")")
+	{
+		dev = sysinfo.dev_name;
+		mac = sysinfo.mac.replace(/:/g,"");
+		state = sysinfo.relay_state;
+		hue = "0";
+	}
+	if (model=="LB100("+COUNTRY+")")
 	{
 		dev = sysinfo.mic_type;
 		mac = sysinfo.mic_mac;
 		state = sysinfo.light_state.on_off;
 		hue = sysinfo.light_state.dft_on_state.hue;
 	}
-	if (model=="LB130(US)")
+	if (model=="LB110("+COUNTRY+")")
+	{
+		dev = sysinfo.mic_type;
+		mac = sysinfo.mic_mac;
+		state = sysinfo.light_state.on_off;
+		hue = sysinfo.light_state.dft_on_state.hue;
+	}
+	if (model=="LB130("+COUNTRY+")")
 	{
 		dev = sysinfo.mic_type;
 		mac = sysinfo.mic_mac;
@@ -221,9 +237,9 @@ function getParms()
 	var a, v, p, request="";
 	if (process.argv.length<3)
 	{
-		console.log("Usage: node "+ PROG + " {-B} {-C} {-D} {-H} {address} {=} {0|1|?|ON|OFF|hue|command}\n" +
-			" address: ip address for smartplug or smartbulb\n" +
-			" switches:  -D=debug,  -B=smartbulb,  -C=command mode -H=smartbulb hue");
+		console.log("Usage: node "+ PROG + " {-B} {-C} {-D} {-H} {-L=EU} {address} {=} {0|1|?|ON|OFF|hue|command}\n" +
+			" address: ip address for device\n" +
+			" switches:  -D=debug,  -B=smartbulb,  -C=command mode -H=LB130 hue -L=US|EU");
 		return false;
 	}
 	
@@ -241,6 +257,7 @@ function getParms()
 			case "-J": USE_JSON = true; continue;
 			case "-C": USE_CMD = true; continue;
 			case "-H": USE_HUE = true; continue;
+			case "-L": COUNTRY = v.toUpperCase(); continue;
 			default:
 			    if (addr=="")
 				{
@@ -260,7 +277,8 @@ function getParms()
 	} // for
 
 	if (DEBUG)
-	   console.log(" D="+DEBUG+" B="+USE_BULB+" T="+TIME_OUT+" J="+USE_JSON+" C="+USE_CMD+" H="+USE_HUE); 
+	   console.log(" D="+DEBUG+" B="+USE_BULB+" T="+TIME_OUT+" J="+USE_JSON+
+	      " C="+USE_CMD+" H="+USE_HUE+ " L="+COUNTRY); 
 	
 	if (cmd.length<1) 
 	{
