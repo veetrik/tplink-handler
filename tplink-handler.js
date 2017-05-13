@@ -3,8 +3,9 @@ const PROG = "tplink-handler";
 const dgram = require('dgram');
 const PORT = 9999;
 var TIME_OUT = 500;
-var COUNTRY = "US";
+//var COUNTRY = "US";
 var DEBUG = false, USE_CMD = false, USE_JSON = false, USE_BULB = false, USE_HUE = false;
+var USE_BRT = false;
 const GET_INFO = '{"system":{"get_sysinfo":{}}}';
 var LOG_FILE = "" //"g:/Apps/Automation/openhab-2.0.0/userdata/logs/handler.log";
 var unit="", addr="", cmd="";
@@ -15,6 +16,9 @@ var client = dgram.createSocket('udp4');
 
 setTimeout(finish, TIME_OUT);
 
+if (USE_BRT)
+   setBrt(addr, cmd)
+else   
 if (USE_HUE)
    setHue(addr, cmd)
 else   
@@ -72,45 +76,30 @@ function showInfo(sysinfo)
 {
     var name = sysinfo.alias;
     var model = sysinfo.model;
-    var mac="";
-	var state="";
-	var dev = "";
-	var hue = "";
+    var mac="", state="", dev = "", hue = "0", brt = "0";
 	
-	if (model=="HS100("+COUNTRY+")")
+	if (model.substr(0,3)=="HS1")
 	{
 		dev = sysinfo.dev_name;
 		mac = sysinfo.mac.replace(/:/g,"");
 		state = sysinfo.relay_state;
-		hue = "0";
 	}
-	if (model=="HS110("+COUNTRY+")")
-	{
-		dev = sysinfo.dev_name;
-		mac = sysinfo.mac.replace(/:/g,"");
-		state = sysinfo.relay_state;
-		hue = "0";
-	}
-	if (model=="LB100("+COUNTRY+")")
+	if (model.substr(0,3)=="LB1")
 	{
 		dev = sysinfo.mic_type;
 		mac = sysinfo.mic_mac;
 		state = sysinfo.light_state.on_off;
-		hue = sysinfo.light_state.dft_on_state.hue;
-	}
-	if (model=="LB110("+COUNTRY+")")
-	{
-		dev = sysinfo.mic_type;
-		mac = sysinfo.mic_mac;
-		state = sysinfo.light_state.on_off;
-		hue = sysinfo.light_state.dft_on_state.hue;
-	}
-	if (model=="LB130("+COUNTRY+")")
-	{
-		dev = sysinfo.mic_type;
-		mac = sysinfo.mic_mac;
-		state = sysinfo.light_state.on_off;
-		hue = sysinfo.light_state.dft_on_state.hue;
+		try
+		{
+			hue = sysinfo.light_state.dft_on_state.hue;
+		}
+		catch(err){}
+		
+		try
+		{
+			brt = sysinfo.light_state.dft_on_state.brightness;
+		}
+		catch(err){}
 	}
 		
 	if (USE_JSON) 
@@ -121,6 +110,7 @@ function showInfo(sysinfo)
         ' "dev":"'  +dev +'",\n' +
         ' "mac":"'  +mac +'",\n' +
         ' "unit":"' +unit +'",\n' +
+		' "brt":"'  +brt + '",\n' +
 		' "hue":"'  +hue + '",\n' +
 		' "state":"' +state +'"\n}');
     }
@@ -182,6 +172,37 @@ function setHue(addr, hue)
 	});
 }
 //-------------------------------------------------------------------------
+function setBrt(addr, brt) 
+{
+  var powerState = 
+        '{"smartlife.iot.smartbulb.lightingservice":{"transition_light_state":{"ignore_default":1,'+
+    	'"on_off":1,"brightness":'+brt+'}}}}';
+  if(DEBUG) console.log(" cmd="+powerState);
+
+  var msgBuf = encrypt(powerState);
+  var message = new Buffer(msgBuf);
+  client.send(message, 0, message.length, PORT, addr, function(err, bytes) 
+  {
+	if (err) throw err;
+    log(' setBrt '+brt+' sent to ' + addr); 
+  });
+	client.on('message', function (msg, remote) 
+	{
+		const decryptedMsg = decrypt(msg).toString('ascii');
+        
+		if (DEBUG)
+			console.log('\n ' + decryptedMsg.toString('ascii') + ' from ' + remote.address);
+
+		log('\n ' + decryptedMsg.toString('ascii') + ' from ' + remote.address);
+
+		var p=decryptedMsg.indexOf('"err_code":0');
+		 
+		if (p<0) state="?";
+
+		console.log(unit+"="+brt);
+	});
+}
+//-------------------------------------------------------------------------
 function setState(addr, state) 
 {
   var powerState = (USE_BULB)
@@ -237,9 +258,9 @@ function getParms()
 	var a, v, p, request="";
 	if (process.argv.length<3)
 	{
-		console.log("Usage: node "+ PROG + " {-B} {-C} {-D} {-H} {-L=EU} {address} {=} {0|1|?|ON|OFF|hue|command}\n" +
+		console.log("Usage: node "+ PROG + " {-B}{-C}{-D}{-H}{-L}{-J} {address} {0|1|?|ON|OFF|QUERY|hue|dim|command}\n" +
 			" address: ip address for device\n" +
-			" switches:  -D=debug,  -B=smartbulb,  -C=command mode -H=LB130 hue -L=US|EU");
+			" switches:  D-debug,  B-bulb,  C-command,  H-hue,  L-dim,  J-JSON");
 		return false;
 	}
 	
@@ -252,16 +273,16 @@ function getParms()
 		switch(a[0].toUpperCase())
 		{
 			case "-D": DEBUG = true; continue;
-			case "-B": USE_BULB = true; continue; // (v=="") ? 0 : v; continue;
+			case "-B": USE_BULB = true; continue; 
 			case "-T": TIME_OUT = v; continue;
 			case "-J": USE_JSON = true; continue;
 			case "-C": USE_CMD = true; continue;
 			case "-H": USE_HUE = true; continue;
-			case "-L": COUNTRY = v.toUpperCase(); continue;
+			case "-L": USE_BRT = true; continue;
+			//case "-L": COUNTRY = v.toUpperCase(); continue;
 			default:
 			    if (addr=="")
 				{
-					//a = (p+"=").split('=');
 				    addr = unit = a[0];
 				    cmd = a[1];
 				   continue;
@@ -278,7 +299,7 @@ function getParms()
 
 	if (DEBUG)
 	   console.log(" D="+DEBUG+" B="+USE_BULB+" T="+TIME_OUT+" J="+USE_JSON+
-	      " C="+USE_CMD+" H="+USE_HUE+ " L="+COUNTRY); 
+	      " C="+USE_CMD+" H="+USE_HUE+ " -L=" + USE_BRT); 
 	
 	if (cmd.length<1) 
 	{
