@@ -1,7 +1,8 @@
 I was using the tp-link smart switches with the hs100-api without problems until I added a tplink smart bulb.
 It looks like the packets are not the sams as for the smart switch. So I decided to write my own
 program interface to handle this in nodejs. It can be use to switch a tp-link smart plug (HS100) or 
-smart bulb (LB100) on and off. I also added the ability to set the hue on color smart bulb (LB130).
+smart bulb (LB100) on and off. I also added the ability to set the hue on color smart bulb (LB130)
+and the brigthness on LB100, LB110 & LB130.
 
 In order to use it you must download and install nodeJS (https://nodejs.org/en/download/).
 Once install you can execute this program on the command line by entering:
